@@ -18,6 +18,11 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
+import dev.langchain4j.rag.DefaultRetrievalAugmentor;
+import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
+import dev.langchain4j.rag.query.transformer.QueryTransformer;
+
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.ConsoleHandler;
@@ -35,7 +40,6 @@ public class RagNaif {
         ConsoleHandler handler = new ConsoleHandler();
         handler.setLevel(Level.FINE);
         packageLogger.addHandler(handler);
-        packageLogger.setUseParentHandlers(false);
     }
     public static void main(String[] args) {
 
@@ -49,6 +53,8 @@ public class RagNaif {
                 .logRequests(true)
                 .logResponses(true)
                 .build();
+
+
 
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
 
@@ -83,10 +89,17 @@ public class RagNaif {
 
         //  Mémoire de conversation (10 messages)
         //  Création de l'assistant
+        QueryTransformer queryTransformer = new CompressingQueryTransformer(chatModel);
+
+        RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
+                .queryTransformer(queryTransformer)
+                .contentRetriever(contentRetriever)
+                .build();
+
         Assistant assistant = AiServices.builder(Assistant.class)
                 .chatModel(chatModel)
                 .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
-                .contentRetriever(contentRetriever)
+                .retrievalAugmentor(retrievalAugmentor)
                 .build();
 
         // 8. Boucle de questions
