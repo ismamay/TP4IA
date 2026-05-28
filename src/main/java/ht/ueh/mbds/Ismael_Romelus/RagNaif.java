@@ -12,7 +12,6 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
-import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
@@ -21,19 +20,34 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RagNaif {
 
 
-
+    private static void configureLogger() {
+        // Configure le logger sous-jacent (java.util.logging)
+        Logger packageLogger = Logger.getLogger("dev.langchain4j");
+        packageLogger.setLevel(Level.FINE); // Ajuster niveau
+        // Ajouter un handler pour la console pour faire afficher les logs
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setLevel(Level.FINE);
+        packageLogger.addHandler(handler);
+        packageLogger.setUseParentHandlers(false);
+    }
     public static void main(String[] args) {
 
+        configureLogger();
         String cle = System.getenv("GEMINI_KEY");
 
         // --- Modèles ---
         ChatModel chatModel = GoogleAiGeminiChatModel.builder()
                 .apiKey(cle)
                 .modelName("gemini-2.5-flash")
+                .logRequests(true)
+                .logResponses(true)
                 .build();
 
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
